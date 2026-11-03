@@ -11,6 +11,8 @@ seed:
 	uv run python scripts/seed_demo_requests.py
 eval:
 	uv run python scripts/run_eval.py
+demo-escalate:
+	uv run python scripts/demo_escalate.py
 up:
 	docker compose up --build
 down:

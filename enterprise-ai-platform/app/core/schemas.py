@@ -49,6 +49,14 @@ class NodeResult(BaseModel):
     precision: PrecisionTier = PrecisionTier.FP8
     attempts: int = 1
     escalation_count: int = 0
+    escalated: bool = False
+    escalated_from: str | None = None
+    escalation_reason: str | None = None
+    edge_rationale: str | None = None
+    precision_requested: str = "unknown"
+    precision_verified: bool = False
+    observed_model_artifact: str | None = None
+    precision_note: str | None = None
     attempt_trace: list[str] = Field(default_factory=list)
     final_status: str = "succeeded"
 

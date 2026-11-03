@@ -11,7 +11,14 @@ from app.validation.validators import SchemaValidator
 class TaskExecutor:
     def __init__(self, registry: ModelRegistry, retry_manager: RetryManager | None = None) -> None:
         self.registry = registry
-        self.retry_manager = retry_manager or RetryManager()
+        if retry_manager is None:
+            from app.settings import get_settings
+
+            settings = get_settings()
+            retry_manager = RetryManager(
+                settings.max_retries_per_node, settings.max_retries_per_request
+            )
+        self.retry_manager = retry_manager
         self.validator = SchemaValidator()
         self.escalation = EscalationManager()
 
@@ -23,6 +30,7 @@ class TaskExecutor:
         precision = node.precision or spec.precisions[0]
         attempts = 0
         escalation_count = 0
+        escalated_from: str | None = None
         attempt_trace: list[str] = []
         while True:
             attempts += 1
@@ -55,6 +63,8 @@ class TaskExecutor:
                     precision=precision,
                     attempts=attempts,
                     escalation_count=escalation_count,
+                    escalated=escalation_count > 0,
+                    escalated_from=escalated_from,
                     attempt_trace=attempt_trace,
                 )
             except Exception as error:
@@ -73,4 +83,5 @@ class TaskExecutor:
                 if next_model is None:
                     raise
                 escalation_count += 1
+                escalated_from = spec.id
                 spec, precision = next_model, next_model.precisions[0]

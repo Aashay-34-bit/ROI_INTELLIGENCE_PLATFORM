@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     mock_failure_rate: float = 0.0
     mock_min_latency_ms: int = 50
     mock_max_latency_ms: int = 500
+    max_retries_per_node: int = 2
+    max_retries_per_request: int = 4
     jev_base_url: str | None = None
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None

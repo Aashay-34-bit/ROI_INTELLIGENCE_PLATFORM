@@ -1,10 +1,20 @@
 import asyncio
 import hashlib
+import os
 import random
 import re
+import threading
 
 from app.core.enums import PrecisionTier
 from app.core.schemas import ModelSpec
+
+_flaky_seen: set[tuple[str, str]] = set()
+_flaky_lock = threading.Lock()
+
+
+def reset_flaky_state() -> None:
+    with _flaky_lock:
+        _flaky_seen.clear()
 
 
 class MockAdapter:
@@ -24,6 +34,19 @@ class MockAdapter:
         return True
 
     async def generate(self, prompt: str, precision: PrecisionTier, **kwargs: object) -> str:
+        mode = os.getenv("MOCK_MODE", "stable").lower()
+        if mode == "always_fail":
+            raise RuntimeError("simulated mock failure (MOCK_MODE=always_fail)")
+        if mode == "flaky_first":
+            key = (self.spec.id, hashlib.sha256(prompt.encode()).hexdigest())
+            limited_model = os.getenv("MOCK_FAIL_FIRST_MODEL")
+            with _flaky_lock:
+                first = (
+                    limited_model is None or limited_model == self.spec.id
+                ) and key not in _flaky_seen
+                _flaky_seen.add(key)
+            if first:
+                raise RuntimeError("simulated first-call failure (MOCK_MODE=flaky_first)")
         seed = int(hashlib.sha256((self.spec.id + prompt).encode()).hexdigest()[:8], 16)
         rng = random.Random(seed)
         if self.max_latency_ms:
