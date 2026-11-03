@@ -1,0 +1,12 @@
+tasks:
+  - {id: c1, category: classification, input: "Classify: The delivery was excellent", expected: positive}
+  - {id: c2, category: classification, input: "Classify: The service was terrible", expected: negative}
+  - {id: c3, category: classification, input: "Classify: Is this urgent?", expected: question}
+  - {id: e1, category: extraction, input: "Email is ava@example.com", expected: ava@example.com}
+  - {id: e2, category: extraction, input: "Phone: 5551234", expected: "5551234"}
+  - {id: e3, category: extraction, input: "Name: Jordan Lee", expected: "Jordan Lee"}
+  - {id: r1, category: reasoning, input: "Explain why tests catch regressions", expected: tests}
+  - {id: r2, category: reasoning, input: "Compare two approaches to caching", expected: caching}
+  - {id: g1, category: generation, input: "Write a short greeting", expected: hello}
+  - {id: g2, category: generation, input: "Summarize a project update", expected: summary}
+  - {id: g3, category: generation, input: "Draft a polite reminder", expected: reminder}

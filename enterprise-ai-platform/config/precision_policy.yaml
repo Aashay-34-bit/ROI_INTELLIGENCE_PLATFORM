@@ -1,0 +1,7 @@
+task_overrides:
+  classification: awq4
+  extraction: awq4
+  reasoning: fp8
+  generation: fp8
+  safety_critical: fp16
+default: fp8

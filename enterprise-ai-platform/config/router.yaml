@@ -1,0 +1,6 @@
+default_strategy: cost_quality
+quality_thresholds: {classification: 0.85, extraction: 0.90, reasoning: 0.95, generation: 0.90, safety_critical: 0.99, computation: 0.8}
+max_retries_per_node: 2
+max_retries_per_request: 4
+escalation_allowed: true
+allow_precision_escalation: true

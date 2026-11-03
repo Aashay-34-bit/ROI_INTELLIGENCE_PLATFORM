@@ -1,0 +1,6 @@
+rules:
+  - {name: email_format, match: {category: extraction, field: email}, handler: regex_email}
+  - {name: salary_calc, match: {category: computation, intent: salary}, handler: deterministic_salary}
+  - {name: exact_yes_no, match: {category: classification, intent: yes_no}, handler: exact_yes_no}
+  - {name: exact_sentiment, match: {category: classification, intent: sentiment}, handler: exact_sentiment}
+  - {name: word_count, match: {category: computation, intent: word_count}, handler: word_count}

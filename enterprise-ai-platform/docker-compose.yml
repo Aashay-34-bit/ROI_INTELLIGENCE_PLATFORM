@@ -1,0 +1,12 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment: ["API_KEY=demo-key", "DATABASE_URL=sqlite:///./platform.db"]
+    volumes: ["./:/app"]
+  dashboard:
+    build: .
+    command: ["streamlit", "run", "app/dashboard/app.py", "--server.address=0.0.0.0"]
+    ports: ["8501:8501"]
+    environment: ["API_URL=http://api:8000"]
+    depends_on: [api]
