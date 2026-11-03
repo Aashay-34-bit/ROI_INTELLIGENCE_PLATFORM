@@ -21,3 +21,7 @@ class ProviderNotAvailable(PlatformError):
 
 class OllamaUnreachable(PlatformError):
     pass
+
+
+class EdgeUnavailable(PlatformError):
+    pass

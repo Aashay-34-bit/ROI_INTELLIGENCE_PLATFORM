@@ -28,6 +28,9 @@ class Node(BaseModel):
     model_id: str | None = None
     precision: PrecisionTier | None = None
     status: str = "pending"
+    is_edge: bool = False
+    edge_rationale: str | None = None
+    escalation_reason: str | None = None
 
 
 class Plan(BaseModel):

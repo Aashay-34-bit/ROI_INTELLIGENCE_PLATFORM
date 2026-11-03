@@ -5,7 +5,9 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 
 from app.api.deps import get_registry, get_router, get_store
 from app.core.enums import RequestStatus, TaskCategory
+from app.core.errors import EdgeUnavailable
 from app.core.schemas import MetricRecord, Node, Plan, Request, RequestResponse, Trace
+from app.edge.edge_router import EdgeRouter
 from app.execution.dag_scheduler import DAGScheduler
 from app.execution.task_executor import TaskExecutor
 from app.routing.jev_mock import JevMockBackend
@@ -123,10 +125,24 @@ async def submit_request(
             )
             node.model_id = node.model_id or (selected.id if selected else decision.model_id)
             node.precision = node.precision or decision.precision
+            local_models = registry.candidates("ollama")
+            local_model = local_models[0] if local_models and registry.provider_ready else None
+            placement = EdgeRouter().place(body, node, local_model)
+            node.is_edge = placement.target == "edge"
+            node.edge_rationale = placement.rationale
+            node.escalation_reason = placement.escalation_reason
+            if placement.target == "edge":
+                node.model_id = local_model.id
+            elif placement.escalation_reason and get_settings().model_provider.lower() == "ollama":
+                raise EdgeUnavailable(
+                    "strict reasoning or generation requires a cloud provider, but only Ollama is configured"
+                )
             decisions[node.node_id] = {
                 "model_id": node.model_id,
                 "strategy": decision.strategy,
                 "precision": node.precision.value,
+                "placement": placement.target,
+                "placement_rationale": placement.rationale,
             }
         trace = await DAGScheduler(TaskExecutor(registry)).schedule(plan, body.request_id)
         trace.jev_decisions = jev_decisions

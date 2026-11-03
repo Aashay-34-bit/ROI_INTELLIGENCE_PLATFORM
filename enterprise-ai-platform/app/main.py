@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import routes_eval, routes_gateway, routes_metrics, routes_models
 from app.api.deps import get_registry
-from app.core.errors import OllamaUnreachable
+from app.core.errors import EdgeUnavailable, OllamaUnreachable
 from app.core.logging import get_logger
 from app.settings import get_settings
 
@@ -34,6 +34,13 @@ async def ollama_unreachable_handler(request: Request, error: OllamaUnreachable)
     return JSONResponse(
         status_code=503,
         content={"error": "ollama_unreachable", "detail": str(error)},
+    )
+
+
+@app.exception_handler(EdgeUnavailable)
+async def edge_unavailable_handler(request: Request, error: EdgeUnavailable) -> JSONResponse:
+    return JSONResponse(
+        status_code=503, content={"error": "edge_unavailable", "detail": str(error)}
     )
 
 
