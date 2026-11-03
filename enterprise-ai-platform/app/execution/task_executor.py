@@ -46,6 +46,20 @@ class TaskExecutor:
                 )
                 if not validation.valid:
                     raise ValueError("; ".join(validation.errors))
+                precision_verified = False
+                precision_note = None
+                observed_artifact = None
+                if spec.provider == "ollama" and spec.actual_precision != "unknown":
+                    observed_artifact = spec.actual_precision
+                    precision_verified = spec.actual_precision.lower() == precision.value.lower()
+                    if not precision_verified:
+                        precision_note = (
+                            f"requested {precision.value}; observed {spec.actual_precision}"
+                        )
+                elif spec.provider == "mock":
+                    precision_note = "mock adapter — precision is a routing label only"
+                else:
+                    precision_note = "adapter does not expose precision; treat as unverified"
                 attempt_trace.append(f"{attempts}:{spec.id}:{precision.value}:validated")
                 in_tokens, out_tokens = max(1, len(prompt.split())), max(1, len(output.split()))
                 cost = (in_tokens * spec.cost_per_1k_in + out_tokens * spec.cost_per_1k_out) / 1000
@@ -61,6 +75,10 @@ class TaskExecutor:
                     tier=spec.tier,
                     is_edge=spec.provider == "ollama",
                     precision=precision,
+                    precision_requested=precision.value,
+                    precision_verified=precision_verified,
+                    observed_model_artifact=observed_artifact,
+                    precision_note=precision_note,
                     attempts=attempts,
                     escalation_count=escalation_count,
                     escalated=escalation_count > 0,
