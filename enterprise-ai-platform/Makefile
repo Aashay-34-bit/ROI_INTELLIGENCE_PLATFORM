@@ -13,6 +13,8 @@ eval:
 	uv run python scripts/run_eval.py
 demo-escalate:
 	uv run python scripts/demo_escalate.py
+demo-jev-routing:
+	uv run python scripts/demo_jev_routing.py
 up:
 	docker compose up --build
 down:

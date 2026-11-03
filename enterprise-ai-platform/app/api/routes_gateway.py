@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import yaml
 from fastapi import APIRouter, Depends, Header, HTTPException
 
 from app.api.deps import get_registry, get_router, get_store
@@ -26,15 +29,60 @@ async def submit_request(
     rule_field = (
         "email" if body.task_category == TaskCategory.EXTRACTION and "@" in body.input else None
     )
-    rule_result = RuleEngine().handle(body.task_category.value, body.input, rule_field)
-    bounded_decisions = await JevMockBackend().decide(
-        body.input,
-        {"urgency": ["high", "normal"], "refund_request": ["refund", "no_refund"]},
-    )
+    jev = JevMockBackend()
+    jev_decisions: dict[str, dict[str, object]] = {}
+    jev_error: str | None = None
+    routing_path = "strategy"
+    if jev.applies_to(body.task_category.value):
+        schema_data = yaml.safe_load(Path("config/jev_schemas.yaml").read_text(encoding="utf-8"))
+        questions = {
+            key: choices for schema in schema_data.values() for key, choices in schema.items()
+        }
+        try:
+            jev_decisions = await jev.decide(body.input, questions)
+        except Exception as error:  # noqa: BLE001 - Jev errors fall back to ordinary routing.
+            jev_error = str(error)
+        map_config = yaml.safe_load(Path("config/router.yaml").read_text(encoding="utf-8"))
+        rule_result = None
+        for condition, destination in map_config.get("jev_routing_map", {}).items():
+            key, expected = condition.split("=", maxsplit=1)
+            if jev_decisions.get(key, {}).get("choice") != expected:
+                continue
+            if destination == "rule:billing_handler":
+                rule_result = RuleEngine.billing_handler()
+                routing_path = f"jev_map:{condition} -> {destination}"
+                break
+            if destination.startswith("tier:"):
+                tier = destination.partition(":")[2]
+                available = registry.candidates(get_settings().model_provider.lower())
+                chosen = next((model for model in available if model.tier == tier), None)
+                if chosen:
+                    routing_path = f"jev_map:{condition} -> {destination}"
+                    break
+        else:
+            rule_result = None
+    else:
+        rule_result = None
+    if routing_path == "strategy":
+        rule_result = RuleEngine().handle(body.task_category.value, body.input, rule_field)
+        if jev_error:
+            routing_path = "jev_error -> strategy_fallback"
+        elif jev_decisions:
+            routing_path = "jev_no_match -> strategy"
+        else:
+            routing_path = "rule" if rule_result is not None else "strategy"
     if rule_result is not None:
         trace = Trace(
             request_id=body.request_id,
-            events=[{"route": "rule", "result": rule_result}, {"jev": bounded_decisions}],
+            jev_decisions=jev_decisions,
+            jev_error=jev_error,
+            routing_path=routing_path,
+            events=[
+                {"route": "rule", "result": rule_result},
+                {"jev_decisions": jev_decisions},
+                {"routing_path": routing_path},
+                *([{"jev_error": jev_error}] if jev_error else []),
+            ],
         )
         result = rule_result
     else:
@@ -53,12 +101,27 @@ async def submit_request(
                 ]
             )
         decisions = {}
+        tier_override = None
+        if routing_path.startswith("jev_map:") and "tier:" in routing_path:
+            tier_override = routing_path.rsplit("tier:", maxsplit=1)[1]
         for node in plan.nodes:
             node_request = body.model_copy(
                 update={"input": node.input or node.task, "task_category": node.task_category}
             )
             decision = routing.route(node_request)
-            node.model_id = node.model_id or decision.model_id
+            selected = (
+                next(
+                    (
+                        model
+                        for model in registry.candidates(get_settings().model_provider.lower())
+                        if model.tier == tier_override
+                    ),
+                    None,
+                )
+                if tier_override
+                else None
+            )
+            node.model_id = node.model_id or (selected.id if selected else decision.model_id)
             node.precision = node.precision or decision.precision
             decisions[node.node_id] = {
                 "model_id": node.model_id,
@@ -66,7 +129,17 @@ async def submit_request(
                 "precision": node.precision.value,
             }
         trace = await DAGScheduler(TaskExecutor(registry)).schedule(plan, body.request_id)
-        trace.events.extend([{"routes": decisions}, {"jev": bounded_decisions}])
+        trace.jev_decisions = jev_decisions
+        trace.jev_error = jev_error
+        trace.routing_path = routing_path
+        trace.events.extend(
+            [
+                {"routes": decisions},
+                {"jev_decisions": jev_decisions},
+                {"routing_path": routing_path},
+                *([{"jev_error": jev_error}] if jev_error else []),
+            ]
+        )
         result = (
             trace.nodes[0].output
             if len(trace.nodes) == 1
@@ -91,8 +164,8 @@ async def submit_request(
         parallel_efficiency=trace.parallel_efficiency,
         retry_count=trace.retry_count,
         escalation_count=trace.escalation_count,
-        jev_decision_count=len(bounded_decisions),
-        jev_decisions_covered=len(bounded_decisions),
+        jev_decision_count=len(jev_decisions),
+        jev_decisions_covered=len(jev_decisions),
         quantization_accuracy_delta={
             node.model_id: registry.get(node.model_id).quant_accuracy_delta.get(
                 body.task_category.value, 0.0

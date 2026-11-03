@@ -1,0 +1,6 @@
+support_ticket:
+  category: ["Billing", "Technical", "General"]
+refund_request:
+  refund_request: ["Yes", "No"]
+urgency_triage:
+  urgency: ["High", "Normal"]

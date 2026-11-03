@@ -1,17 +1,35 @@
+from pathlib import Path
+
+import yaml
+
+
 class JevMockBackend:
+    def __init__(self, router_config: str | Path = "config/router.yaml") -> None:
+        self.router_config = yaml.safe_load(Path(router_config).read_text(encoding="utf-8"))
+
+    def applies_to(self, task_category: str) -> bool:
+        return task_category in self.router_config.get("jev_applies_to", [])
+
     async def decide(
         self, input: str, questions: dict[str, list[str]]
     ) -> dict[str, dict[str, object]]:
         text = input.lower()
         output: dict[str, dict[str, object]] = {}
         for key, choices in questions.items():
-            if key == "urgency":
-                choice = next(
-                    (x for x in choices if x.lower() in text and x.lower() in {"high", "urgent"}),
-                    choices[0],
+            if key == "refund_request":
+                affirmative = any(
+                    phrase in text for phrase in ("charged twice", "refund", "duplicate charge")
                 )
-            elif key == "refund_request":
-                choice = next((x for x in choices if x.lower() in text), choices[-1])
+                desired = "yes" if affirmative else "no"
+                choice = next((x for x in choices if x.lower() == desired), choices[0])
+            elif key == "urgency":
+                urgent = any(word in text for word in ("urgent", "immediately", "critical"))
+                desired = "high" if urgent else "normal"
+                choice = next((x for x in choices if x.lower() == desired), choices[0])
+            elif key == "category":
+                billing = any(word in text for word in ("charged", "billing", "refund"))
+                desired = "billing" if billing else "general"
+                choice = next((x for x in choices if x.lower() == desired), choices[-1])
             else:
                 choice = next((x for x in choices if x.lower() in text), choices[0])
             output[key] = {"choice": choice, "confidence": 0.75}

@@ -71,6 +71,9 @@ class Trace(BaseModel):
     parallel_efficiency: float = 0
     retry_count: int = 0
     escalation_count: int = 0
+    jev_decisions: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    jev_error: str | None = None
+    routing_path: str | None = None
 
 
 class ModelSpec(BaseModel):

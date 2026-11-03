@@ -55,3 +55,12 @@ class RuleEngine:
             if handler == "word_count":
                 return {"value": len(text.split())}
         return None
+
+    @staticmethod
+    def billing_handler() -> dict[str, Any]:
+        return {
+            "category": "Billing",
+            "refund_request": "Yes",
+            "requires_followup": True,
+            "handler": "billing_handler",
+        }
