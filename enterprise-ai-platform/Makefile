@@ -1,4 +1,4 @@
-.PHONY: install dev test lint seed eval up down
+.PHONY: install dev test lint seed eval up down demo-escalate demo-jev-routing demo-harness test-real-ollama
 install:
 	uv sync --extra dev
 dev:
@@ -17,6 +17,8 @@ demo-jev-routing:
 	uv run python scripts/demo_jev_routing.py
 demo-harness:
 	uv run python scripts/demo_harness.py
+test-real-ollama:
+	uv run python scripts/test_real_ollama.py
 up:
 	docker compose up --build
 down:

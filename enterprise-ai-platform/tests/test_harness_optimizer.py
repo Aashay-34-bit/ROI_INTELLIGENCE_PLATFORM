@@ -15,6 +15,7 @@ async def test_optimizer_picks_concise_when_synthetic_scorer_rewards_it(
     monkeypatch.setenv("MOCK_MAX_LATENCY_MS", "0")
     get_settings.cache_clear()
     optimizer = HarnessOptimizer(tmp_config_dir / "harness" / "best.json")
+    optimizer.history_path.unlink(missing_ok=True)
     tasks = [
         {"id": "synthetic", "category": "reasoning", "input": "Solve this", "expected": "concise"}
     ]
@@ -40,6 +41,7 @@ async def test_optimizer_appends_history(tmp_config_dir, monkeypatch):
     monkeypatch.setenv("MOCK_MAX_LATENCY_MS", "0")
     get_settings.cache_clear()
     optimizer = HarnessOptimizer(tmp_config_dir / "harness" / "best.json")
+    optimizer.history_path.unlink(missing_ok=True)
     tasks = [{"id": "one", "category": "generation", "input": "Hello", "expected": "hello"}]
     await optimizer.optimize(tasks)
     await optimizer.optimize(tasks)

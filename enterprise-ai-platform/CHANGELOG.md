@@ -9,4 +9,4 @@
 - 11.5: Strict classification and extraction requests now require a ready local Ollama placement; unsupported strict tasks record capability escalation or return an explicit 503.
 - 11.6: Harness runs now execute every task against three or more candidate prompt configs, compare scores and cost, and append best/history JSON results.
 - 11.7: Added Provider Truth counts for providers, precision verification, and recent 503 errors, with visible unverified badges and estimate labels in the dashboard.
-- Follow-up phases will record precision verification, exercise escalation and Jev routing, integrate edge placement, compare harness candidates, and distinguish observed metrics from estimates.
+- 11.8: Documented local-only Ollama mode, executable demos, Provider Truth, and an opt-in real-provider smoke target.
