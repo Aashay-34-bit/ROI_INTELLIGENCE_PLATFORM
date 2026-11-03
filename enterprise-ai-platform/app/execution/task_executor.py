@@ -1,5 +1,6 @@
 import time
 
+from app.core.errors import OllamaUnreachable
 from app.core.schemas import Node, NodeResult
 from app.providers.registry import ModelRegistry
 from app.validation.escalation import EscalationManager
@@ -58,10 +59,16 @@ class TaskExecutor:
                 )
             except Exception as error:
                 attempt_trace.append(f"{attempts}:{spec.id}:{precision.value}:failed:{error}")
+                if isinstance(error, OllamaUnreachable):
+                    raise
                 if self.retry_manager.consume(node.node_id):
                     continue
+                from app.settings import get_settings
+
                 next_model = self.escalation.next_model(
-                    spec, self.registry.list(), node.task_category.value
+                    spec,
+                    self.registry.candidates(get_settings().model_provider.lower()),
+                    node.task_category.value,
                 )
                 if next_model is None:
                     raise

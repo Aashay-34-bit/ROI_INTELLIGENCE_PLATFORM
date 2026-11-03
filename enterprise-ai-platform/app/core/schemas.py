@@ -67,7 +67,9 @@ class Trace(BaseModel):
 
 class ModelSpec(BaseModel):
     id: str
+    display_name: str | None = None
     provider: str = "mock"
+    actual_precision: str = "unknown"
     tier: str
     precisions: list[PrecisionTier]
     cost_per_1k_in: float = 0

@@ -8,6 +8,9 @@ class AnthropicAdapter:
     def __init__(self, spec: ModelSpec, api_key: str) -> None:
         self.spec, self.api_key = spec, api_key
 
+    async def health(self) -> bool:
+        return True
+
     async def generate(self, prompt: str, precision: PrecisionTier, **kwargs: object) -> str:
         async with httpx.AsyncClient() as client:
             response = await client.post(

@@ -1,5 +1,6 @@
 import asyncio
 
+from app.core.errors import OllamaUnreachable
 from app.core.schemas import Plan, Trace
 from app.execution.context_manager import ContextManager
 from app.execution.task_executor import TaskExecutor
@@ -67,6 +68,8 @@ class DAGScheduler:
             for node, result in zip(ready, completed, strict=True):
                 pending.remove(node.node_id)
                 if isinstance(result, BaseException):
+                    if isinstance(result, OllamaUnreachable):
+                        raise result
                     raise RuntimeError(f"node {node.node_id} failed: {result}") from result  # noqa: TRY004
                 outputs[node.node_id] = str(result.output)
                 results.append(result)

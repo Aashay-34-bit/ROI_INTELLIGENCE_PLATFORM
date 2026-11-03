@@ -8,3 +8,16 @@ class CycleDetectedError(PlatformError):
 
 class RetryBudgetExhausted(PlatformError):
     pass
+
+
+class ProviderNotAvailable(PlatformError):
+    def __init__(self, model_id: str, provider: str) -> None:
+        self.model_id = model_id
+        self.provider = provider
+        super().__init__(
+            f"Model {model_id!r} uses provider {provider!r}, not the configured provider"
+        )
+
+
+class OllamaUnreachable(PlatformError):
+    pass

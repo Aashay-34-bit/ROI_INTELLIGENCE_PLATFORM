@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     api_key: str = "demo-key"
     database_url: str = "sqlite:///./platform.db"
     default_strategy: str = "cost_quality"
+    model_provider: str = "mock"
     mock_failure_rate: float = 0.0
     mock_min_latency_ms: int = 50
     mock_max_latency_ms: int = 500

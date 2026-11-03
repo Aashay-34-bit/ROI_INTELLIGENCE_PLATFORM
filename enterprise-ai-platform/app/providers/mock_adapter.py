@@ -20,6 +20,9 @@ class MockAdapter:
         self.max_latency_ms = max_latency_ms
         self.failure_rate = failure_rate
 
+    async def health(self) -> bool:
+        return True
+
     async def generate(self, prompt: str, precision: PrecisionTier, **kwargs: object) -> str:
         seed = int(hashlib.sha256((self.spec.id + prompt).encode()).hexdigest()[:8], 16)
         rng = random.Random(seed)
