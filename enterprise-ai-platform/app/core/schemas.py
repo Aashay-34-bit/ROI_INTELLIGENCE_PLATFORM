@@ -142,8 +142,19 @@ class HarnessConfig(BaseModel):
     config_id: str = Field(default_factory=lambda: str(uuid4()))
     prompt_style: str = "concise"
     memory_policy: str = "parents_only"
+    tool_choices: list[str] = Field(default_factory=list)
+    max_iters: int = 1
     score: float = 0
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class HarnessResult(BaseModel):
+    configs_evaluated: int
+    scores_per_config: list[dict[str, Any]]
+    chosen_config: dict[str, Any]
+    improvement_over_baseline: float
+    total_cost_usd: float
+    total_latency_ms: float
 
 
 class RequestResponse(BaseModel):
