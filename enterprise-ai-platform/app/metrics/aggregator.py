@@ -45,3 +45,41 @@ def summarize(records: list[MetricRecord]) -> dict[str, object]:
         "edge_offload_rate": edge_nodes / max(1, edge_nodes + cloud_nodes),
         "by_category": dict(categories),
     }
+
+
+def provider_truth(
+    records: list[MetricRecord], recent_errors: list[dict[str, object]], window: int = 100
+) -> dict[str, object]:
+    recent = records[-window:]
+    providers = {key: 0 for key in ("mock", "ollama", "openai", "anthropic", "edge")}
+    precision = {"true": 0, "false": 0}
+    node_rows: list[dict[str, object]] = []
+    real = False
+    for record in recent:
+        for node in record.nodes:
+            provider = str(node.get("provider", "unknown")).lower()
+            real = real or provider != "mock"
+            bucket = "edge" if node.get("is_edge") else provider
+            providers[bucket] = providers.get(bucket, 0) + 1
+            verified = bool(node.get("precision_verified", False))
+            precision[str(verified).lower()] += 1
+            node_rows.append(
+                {
+                    "request_id": record.request_id,
+                    "created_at": record.created_at.isoformat(),
+                    "provider": provider,
+                    "model_id": node.get("model_id"),
+                    "precision_requested": node.get("precision_requested"),
+                    "observed_model_artifact": node.get("observed_model_artifact"),
+                    "precision_verified": verified,
+                    "precision_note": node.get("precision_note"),
+                }
+            )
+    return {
+        "window": len(recent),
+        "by_provider": providers,
+        "by_precision_verified": precision,
+        "recent_errors": recent_errors[:5],
+        "has_real_calls": real,
+        "recent_nodes": node_rows[-100:],
+    }
