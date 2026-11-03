@@ -25,3 +25,7 @@ class OllamaUnreachable(PlatformError):
 
 class EdgeUnavailable(PlatformError):
     pass
+
+
+class TaskExecutionFailed(PlatformError):
+    pass

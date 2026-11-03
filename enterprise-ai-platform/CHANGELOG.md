@@ -10,3 +10,4 @@
 - 11.6: Harness runs now execute every task against three or more candidate prompt configs, compare scores and cost, and append best/history JSON results.
 - 11.7: Added Provider Truth counts for providers, precision verification, and recent 503 errors, with visible unverified badges and estimate labels in the dashboard.
 - 11.8: Documented local-only Ollama mode, executable demos, Provider Truth, and an opt-in real-provider smoke target.
+- 11.9: Retry-budget exhaustion now returns a structured HTTP 422 instead of an unhandled server error.

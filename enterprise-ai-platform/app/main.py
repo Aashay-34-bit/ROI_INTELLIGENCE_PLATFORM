@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import routes_eval, routes_gateway, routes_metrics, routes_models
 from app.api.deps import get_registry, get_store
-from app.core.errors import EdgeUnavailable, OllamaUnreachable
+from app.core.errors import EdgeUnavailable, OllamaUnreachable, TaskExecutionFailed
 from app.core.logging import get_logger
 from app.settings import get_settings
 
@@ -43,6 +43,16 @@ async def edge_unavailable_handler(request: Request, error: EdgeUnavailable) -> 
     get_store().write_error("edge_unavailable", str(error))
     return JSONResponse(
         status_code=503, content={"error": "edge_unavailable", "detail": str(error)}
+    )
+
+
+@app.exception_handler(TaskExecutionFailed)
+async def task_execution_failed_handler(
+    request: Request, error: TaskExecutionFailed
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content={"error": "task_execution_failed", "detail": str(error)},
     )
 
 

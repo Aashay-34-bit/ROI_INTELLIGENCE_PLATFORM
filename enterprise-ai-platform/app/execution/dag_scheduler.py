@@ -1,6 +1,6 @@
 import asyncio
 
-from app.core.errors import OllamaUnreachable
+from app.core.errors import OllamaUnreachable, TaskExecutionFailed
 from app.core.schemas import Plan, Trace
 from app.execution.context_manager import ContextManager
 from app.execution.task_executor import TaskExecutor
@@ -70,7 +70,7 @@ class DAGScheduler:
                 if isinstance(result, BaseException):
                     if isinstance(result, OllamaUnreachable):
                         raise result
-                    raise RuntimeError(f"node {node.node_id} failed: {result}") from result  # noqa: TRY004
+                    raise TaskExecutionFailed(f"node {node.node_id} failed: {result}") from result
                 outputs[node.node_id] = str(result.output)
                 results.append(result)
         path, duration = self.critical_path(plan, {r.node_id: r.latency_ms for r in results})
