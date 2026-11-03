@@ -11,7 +11,7 @@
       "mean_score": 0.9090909090909091,
       "rollouts": 11,
       "cost_usd": 0.0197,
-      "latency_ms": 3724.4121000985615
+      "latency_ms": 3739.6964998333715
     },
     {
       "config_id": "concise",
@@ -23,7 +23,7 @@
       "mean_score": 0.9090909090909091,
       "rollouts": 11,
       "cost_usd": 0.0249,
-      "latency_ms": 3194.6130999713205
+      "latency_ms": 3181.782300118357
     },
     {
       "config_id": "few-shot",
@@ -35,7 +35,7 @@
       "mean_score": 0.9090909090909091,
       "rollouts": 11,
       "cost_usd": 0.030100000000000002,
-      "latency_ms": 2896.037799946498
+      "latency_ms": 2894.630199938547
     }
   ],
   "chosen_config": {
@@ -45,6 +45,6 @@
   },
   "improvement_over_baseline": 0.0,
   "total_cost_usd": 0.0747,
-  "total_latency_ms": 9815.06300001638,
-  "completed_at": "2026-11-03T14:55:51.103851+00:00"
+  "total_latency_ms": 9816.108999890275,
+  "completed_at": "2026-11-03T15:00:18.449919+00:00"
 }
