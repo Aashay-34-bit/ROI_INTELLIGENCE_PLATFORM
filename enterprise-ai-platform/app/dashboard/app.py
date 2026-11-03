@@ -26,7 +26,8 @@ with pages[0]:
     a, b, c = st.columns(3)
     a.metric("Requests", data.get("request_count", 0))
     b.metric("Cost USD", f"{data.get('cost_usd', 0):.4f}")
-    c.metric("Savings", f"{data.get('savings_pct', 0):.1f}%")
+    c.metric("Savings (ESTIMATE)", f"{data.get('savings_pct', 0):.1f}%")
+    st.caption("ESTIMATE — run `make demo-harness` for a candidate comparison.")
 with pages[1]:
     st.plotly_chart(
         px.pie(
@@ -40,7 +41,7 @@ with pages[2]:
     st.metric("Parallel efficiency", data.get("parallel_efficiency", 0))
     st.metric("Critical path latency ms", data.get("critical_path_latency_ms", 0))
 with pages[3]:
-    st.write("Quantization accuracy delta is recorded per task and model evaluation.")
+    st.write("ESTIMATE — run `make demo-harness` first to compare evaluation candidates.")
 with pages[4]:
     st.metric("Retry rate", data.get("retry_rate", 0))
     st.metric("Escalation rate", data.get("escalation_rate", 0))
